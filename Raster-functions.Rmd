@@ -38,7 +38,7 @@ class_m_list <- c(0, 6, 1,
                   10,100, 3)
 
 class_mat <- matrix(class_m_list, ncol = 3, byrow = TRUE)
-
+par(xpd = FALSE)
 hist(chm, 
      main="Distribution of Canopy Height\n Lower Teakettle, California",
      xlab="Tree Height (m)",
@@ -118,4 +118,12 @@ writeRaster(chm_class_h,
             overwrite=TRUE)
 
 ```
+
+```{r timestamp}
+sink(paste0(format(Sys.time(), "%Y-%m-%d_%H%M%S"), 
+            "_sessionInfo.txt"))
+sessionInfo()
+sink()
+```
+
 

@@ -12,13 +12,15 @@ Start by putting up objectives/tasks that students will be working though:
 ```{r add-libraries}
 library(raster)
 library(rgdal)
+source("scripts/functions.R")
 
 ```
 
 
-```{r import-raster}
+```{r import-raster-variable}
 # import raster from data
 chm <- raster("../NEONdata/D17-California/TEAK/2013/lidar/TEAK_lidarCHM.tif")
+chosen_breaks <- c(6,30,50,100)
 
 ```
 
@@ -33,18 +35,20 @@ chm[chm==0] <- NA
 1. Classify the raster according to some distribution – low medium and tall trees. This could be done using a histogram potentially or we could just decide that <2m is generally grasses / understory, <6m small trees,and the rest are tall trees. A function could import the desired thresholds. Visualize histogram/density and plot vertical cutoff lines.
 
 ```{r classify-by-height}
-class_m_list <- c(0, 6, 1,
-                  6, 10, 2,
-                  10,100, 3)
 
-class_mat <- matrix(class_m_list, ncol = 3, byrow = TRUE)
-par(xpd = FALSE)
-hist(chm, 
-     main="Distribution of Canopy Height\n Lower Teakettle, California",
-     xlab="Tree Height (m)",
-     col="springgreen")
+# test_breaks = c(6,30,50,100)
+# class_mat = create_h_class_mat(test_breaks)
+# class_m_list_test <- c(0, 6, 1,
+#                      6, 30, 2,
+#                      30, 50, 3,
+#                      50,100, 4)
+# class_mat_test <- matrix(class_m_list_test, ncol = 3, byrow = TRUE)
 
-abline(v= c(class_mat[, 2]), col="red")
+#try(if(class_mat != class_mat_test) stop("function create_h_class_mat did not work"))
+
+class_mat = create_h_class_mat(chosen_breaks)
+
+plot_chm_density(chm, "chm density by function", chosen_breaks)
 
 chm_class_h <- reclassify(chm, class_mat)
 
@@ -55,57 +59,15 @@ chm_class_h <- reclassify(chm, class_mat)
 1. Plot the classified raster, add a legend for each “class” - legends are super tricky to simplifying this process with a function would be good.  see: http://neon-workwithdata.github.io/neon-data-institute-2016/R/classify-by-threshold-R/  for my take on forcing a legend outside of the plot area using par settings. You may have other better forms of magic to make this work well. :)
 
 ```{r plot-raster}
-# don't plot outside of plot boundaries, margins = c()
-par(xpd = FALSE, mar=c(5.1, 4.1, 4.1, 4.5))     
-# plot
-plot(chm_class_h,
-     col=c("red","blue","green"), # hard code colors, unclassified (0)=white,
-		 #N (1) = white, (2) =blue, S(3)=green
-     main="Height Classified CHM \nLower Teakettle, California",
-     legend=F)
-
-# allow legend to plot outside of bounds
-par(xpd=TRUE)
-# create the legend
-# right most bound +20 
-leg_x = par()$usr[2] + 20
-leg_y = par()$usr[4] + 50 - (abs(par()$usr[4]-par()$usr[3])/2)
-
-legend(leg_x, leg_y,  # set x,y legend location
-       legend = c("Understory", "Lower Trees", "Tall Trees"),  # make sure the order matches the colors, next
-       fill = c("red","blue", "green"),
-       bty="n") # turn off border
+plot_reclassified_raster(chm_class_h, site.name = "TEAK", chosen_breaks)
 
 ```
 
 1. Export the plot figure to a pdf – publishable
 
 ```{r export-figure-pdf, eval=FALSE}
-pdf(file = "TEAK_class_height.pdf", width = 7, height = 6)
-
-# don't plot outside of plot boundaries, margins = c()
-par(xpd = FALSE, mar=c(5.1, 4.1, 4.1, 4.5))     
-# plot
-plot(chm_class_h,
-     col=c("red","blue","green"), # hard code colors, unclassified (0)=white,
-		 #N (1) = white, (2) =blue, S(3)=green
-     main="Height Classified CHM \nLower Teakettle, California",
-     legend=F)
-
-# allow legend to plot outside of bounds
-par(xpd=TRUE)
-# create the legend
-# right most bound +20 
-leg_x = par()$usr[2] + 20
-leg_y = par()$usr[4] + 50 - (abs(par()$usr[4]-par()$usr[3])/2)
-
-legend(leg_x, leg_y,  # set x,y legend location
-       legend = c("Understory", "Lower Trees", "Tall Trees"),  # make sure the order matches the colors, next
-       fill = c("red","blue", "green"),
-       bty="n") # turn off border
-
-dev.off()
-
+make_pdf(plot_reclassified_raster(chm_class_h, site.name = "TEAK", chosen_breaks), 
+         filename = "output/TEAK_class_height.pdf", width = 7, height = 6)
 ```
 
 1. Export the classified raster as a geotiff with NaFlagg = -9999 to an outputs folder.

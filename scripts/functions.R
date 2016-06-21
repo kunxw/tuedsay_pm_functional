@@ -1,10 +1,3 @@
----
-title: "functions-for-rasters"
-author: "Kunxuan Wang"
-date: "June 21, 2016"
-output: html_document
----
-
 #######################
 # function to create reclassify matrix from a set of breaks
 create_h_class_mat <- function(breaks) {
